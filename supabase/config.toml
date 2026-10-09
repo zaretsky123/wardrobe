@@ -1,0 +1,8 @@
+[functions.wardrobe-login]
+verify_jwt = false
+
+[functions.wardrobe-agent]
+verify_jwt = false
+
+[functions.wardrobe-setup]
+verify_jwt = false

@@ -1,0 +1,28 @@
+const paths={
+ hanger:'M9 6a3 3 0 0 1 6 0c0 2-3 2-3 4l9 6a1.5 1.5 0 0 1-.8 2.8H3.8A1.5 1.5 0 0 1 3 16l9-6',
+ spark:'m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3',
+ layers:'m12 3 9 5-9 5-9-5 9-5M3 12l9 5 9-5M3 17l9 5 9-5',
+ bag:'M5 7h14l1 14H4L5 7M8 8V6a4 4 0 0 1 8 0v2',
+ plus:'M12 5v14M5 12h14',
+ search:'M21 21l-5-5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
+ heart:'M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8',
+ settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1 1-3',
+ close:'M6 6l12 12M18 6 6 18',
+ arrow:'M5 12h14M13 6l6 6-6 6',
+ back:'M19 12H5M11 6l-6 6 6 6',
+ up:'M6 15l6-6 6 6',
+ down:'M6 9l6 6 6-6',
+ edit:'m16 3 5 5-13 13H3v-5L16 3M13 6l5 5',
+ trash:'M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7',
+ restore:'M3 4v6h6M3 10a9 9 0 1 1 2 9M12 7v5l3 2',
+ check:'m5 12 4 4L19 6',
+ lock:'M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5V10M12 14v3',
+ logout:'M10 4H4v16h6M9 12h12M16 7l5 5-5 5',
+ upload:'M12 16V3M7 8l5-5 5 5M4 15v6h16v-6',
+ link:'M10 13a5 5 0 0 0 7 0l4-4a5 5 0 0 0-7-7l-2 2M14 11a5 5 0 0 0-7 0l-4 4a5 5 0 0 0 7 7l2-2',
+ image:'M3 3h18v18H3V3M3 17l6-6 5 5 3-3 4 4M14 8h.01',
+ tune:'M4 7h16M4 17h16M8 4v6M16 14v6',
+ eye:'M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12M9 12a3 3 0 1 0 6 0 3 3 0 0 0-6 0',
+ grid:'M3 3h7v7H3V3M14 3h7v7h-7V3M3 14h7v7H3v-7M14 14h7v7h-7v-7'
+};
+export function icon(name,cls=''){return `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${paths[name]||paths.hanger}"/></svg>`;}
