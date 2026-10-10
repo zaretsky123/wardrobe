@@ -46,9 +46,23 @@ test('database policies, transactional saving and outfit references',async t=>{
    const row=await db.query('select title from wardrobe_entries where id=$1',[ITEM]);assert.equal(row.rows[0].title,'Джинсы');
    const photos=await db.query('select count(*)::int as count from wardrobe_photos where entry_id=$1',[ITEM]);assert.equal(photos.rows[0].count,1);
  });
+ await t.test('tags persist independently, survive older clients and can be cleared',async()=>{
+   await as('authenticated',OWNER,tx=>save(tx,{id:ITEM,kind:'item',title:'Джинсы',tags:['От отца','Тёмное','Любимое'],favorite:false}));
+   let result=await as('authenticated',OWNER,tx=>tx.query('select tags,favorite from wardrobe_entries where id=$1',[ITEM]));
+   assert.deepEqual(result.rows[0],{tags:['От отца','Тёмное','Любимое'],favorite:false});
+   await as('authenticated',OWNER,tx=>tx.query('update wardrobe_entries set favorite=true where id=$1',[ITEM]));
+   await as('authenticated',OWNER,tx=>save(tx,{id:ITEM,kind:'item',title:'Джинсы',favorite:true}));
+   result=await as('authenticated',OWNER,tx=>tx.query('select tags from wardrobe_entries where id=$1',[ITEM]));
+   assert.deepEqual(result.rows[0].tags,['От отца','Тёмное','Любимое']);
+   await as('authenticated',OWNER,tx=>save(tx,{id:ITEM,kind:'item',title:'Джинсы',tags:[],favorite:true}));
+   result=await as('authenticated',OWNER,tx=>tx.query('select tags,favorite from wardrobe_entries where id=$1',[ITEM]));
+   assert.deepEqual(result.rows[0],{tags:[],favorite:true});
+   await assert.rejects(as('authenticated',OWNER,tx=>tx.query('update wardrobe_entries set tags=array[null]::text[] where id=$1',[ITEM])),/check constraint/);
+ });
  await t.test('outfits reference only real wardrobe items and reject empty selections',async()=>{
    await as('authenticated',OWNER,tx=>save(tx,{id:REFERENCE,kind:'inspiration',title:'Референс'}));
-   await as('authenticated',OWNER,tx=>save(tx,{id:OUTFIT,kind:'outfit',title:'На вечер',inspiration_id:REFERENCE},[],[ITEM]));
+   await as('authenticated',OWNER,tx=>save(tx,{id:OUTFIT,kind:'outfit',title:'На вечер',inspiration_id:REFERENCE,tags:['Тёплый']},[],[ITEM]));
+   const tags=await as('authenticated',OWNER,tx=>tx.query('select tags from wardrobe_entries where id=$1',[OUTFIT]));assert.deepEqual(tags.rows[0].tags,['Тёплый']);
    await assert.rejects(as('authenticated',OWNER,tx=>save(tx,{id:OUTFIT,kind:'outfit',title:'Ошибка'},[],[REFERENCE])),/only wardrobe items/);
    await assert.rejects(as('authenticated',OWNER,tx=>save(tx,{id:OUTFIT,kind:'outfit',title:'Ошибка'},[],[])),/at least one/);
    const row=await db.query('select title from wardrobe_entries where id=$1',[OUTFIT]);assert.equal(row.rows[0].title,'На вечер');

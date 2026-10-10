@@ -15,3 +15,13 @@
 /* Compact interface without decorative copy. */
 .login-page{display:flex;align-items:center;justify-content:center;background:#f7f7f4;padding:28px;min-height:100dvh}.login-panel{width:100%;max-width:420px;padding:38px;background:#fff;border:1px solid #e6e9df;border-radius:22px}.login-form-wrap{max-width:none}.login-form-wrap>.brand{margin-bottom:30px}.login-form-wrap h2{margin:0 0 24px;font-size:26px}.header-actions{display:flex;align-items:center;gap:12px}.page-header .button{margin-top:0}.main{padding-bottom:40px}.empty-state{gap:20px;min-height:320px;justify-content:center}.empty-state h2{margin-top:0}.detail-top{justify-content:flex-end}.modal-header h2{margin-top:0}
 @media(max-width:700px){.login-page{padding:20px;flex-direction:row}.login-panel{padding:28px 24px}.login-form-wrap h2{font-size:24px}.header-actions{gap:8px}.header-actions .mobile-settings{width:39px;height:39px;padding:8px}.main{padding-bottom:calc(90px + env(safe-area-inset-bottom))}.empty-state{min-height:300px}}
+
+/* Tags shared by the editor, filters and cards. */
+.tags-field{border:0;padding:0;margin:0;min-width:0}
+.tags-field legend{font-size:11px;color:#7b856f;margin-bottom:9px}
+.tags-field[hidden],.categories[hidden]{display:none}
+.filter-panel{flex-wrap:wrap;align-items:center}
+.filter-tags{flex:1 1 480px}
+.filter-panel .checkbox-chips label{width:auto;max-width:none;min-width:0;flex:none}
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.card-tags span{font-size:9px;line-height:1.4;color:#697c52;background:#edf1e6;border-radius:9px;padding:4px 7px;overflow-wrap:anywhere}

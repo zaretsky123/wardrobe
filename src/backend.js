@@ -37,7 +37,7 @@ export class WardrobeBackend {
       const {data:urls,error:signError}=await this.client.storage.from('wardrobe').createSignedUrls(paths.slice(offset,offset+100),900);if(signError)throw signError;
       for(const u of urls||[]){if(u.error)throw new Error('Не удалось открыть фотографию.');this.signed.set(u.path,u.signedUrl);}
     }
-    for(const e of entries){e.photos.sort((a,b)=>a.position-b.position);e.photos=e.photos.map(p=>({...p,url:this.signed.get(p.path)}));e.item_ids=e.links.map(l=>l.item_id);}
+    for(const e of entries){e.tags=e.tags||[];e.photos.sort((a,b)=>a.position-b.position);e.photos=e.photos.map(p=>({...p,url:this.signed.get(p.path)}));e.item_ids=e.links.map(l=>l.item_id);}
     return entries;
   }
   async save(draft,photoDrafts){

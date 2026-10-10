@@ -25,6 +25,7 @@ create table public.wardrobe_entries (
   size text check (length(size)<=40),
   fit text check (length(fit)<=100),
   seasons text[] not null default '{}' check (seasons <@ array['Весна','Лето','Осень','Зима']),
+  tags text[] not null default '{}' check (cardinality(tags)<=30 and array_position(tags,null) is null),
   source_url text check (source_url is null or (length(source_url)<=2048 and source_url ~ '^https?://')),
   note text not null default '' check (length(note)<=5000),
   price numeric(12,2) check (price>=0),
@@ -123,6 +124,7 @@ declare
   v_owner uuid := auth.uid();
   v_id uuid := (p_entry->>'id')::uuid;
   v_removed text[];
+  v_tags text[];
   p jsonb;
   v_position integer := 0;
   v_item uuid;
@@ -135,13 +137,14 @@ begin
   if nullif(p_entry->>'inspiration_id','') is not null and not exists (
     select 1 from public.wardrobe_entries where id=(p_entry->>'inspiration_id')::uuid and user_id=v_owner and kind='inspiration'
   ) then raise exception 'Invalid inspiration'; end if;
-  insert into public.wardrobe_entries(id,user_id,kind,title,category,color,brand,size,fit,seasons,source_url,note,price,favorite,inspiration_id)
+  v_tags := array(select jsonb_array_elements_text(coalesce(p_entry->'tags','[]'::jsonb)));
+  insert into public.wardrobe_entries(id,user_id,kind,title,category,color,brand,size,fit,seasons,tags,source_url,note,price,favorite,inspiration_id)
   values (v_id,v_owner,p_entry->>'kind',trim(p_entry->>'title'),nullif(p_entry->>'category',''),nullif(p_entry->>'color',''),
     nullif(p_entry->>'brand',''),nullif(p_entry->>'size',''),nullif(p_entry->>'fit',''),
-    array(select jsonb_array_elements_text(coalesce(p_entry->'seasons','[]'::jsonb))),nullif(p_entry->>'source_url',''),
+    array(select jsonb_array_elements_text(coalesce(p_entry->'seasons','[]'::jsonb))),coalesce(v_tags,'{}'),nullif(p_entry->>'source_url',''),
     coalesce(p_entry->>'note',''),nullif(p_entry->>'price','')::numeric,coalesce((p_entry->>'favorite')::boolean,false),nullif(p_entry->>'inspiration_id','')::uuid)
   on conflict(id) do update set kind=excluded.kind,title=excluded.title,category=excluded.category,color=excluded.color,brand=excluded.brand,
-    size=excluded.size,fit=excluded.fit,seasons=excluded.seasons,source_url=excluded.source_url,note=excluded.note,price=excluded.price,
+    size=excluded.size,fit=excluded.fit,seasons=excluded.seasons,tags=case when p_entry ? 'tags' then excluded.tags else public.wardrobe_entries.tags end,source_url=excluded.source_url,note=excluded.note,price=excluded.price,
     favorite=excluded.favorite,inspiration_id=excluded.inspiration_id;
 
   select coalesce(array_agg(path),'{}') into v_removed from public.wardrobe_photos
