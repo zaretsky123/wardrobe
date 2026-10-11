@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {escapeHTML,safeLink,filterEntries,validateEntry,filename,tagsForKind} from '../src/domain.js';
+import {escapeHTML,safeLink,filterEntries,validateEntry,filename,tagsForKind,photoRolesForKind,photoRoleForKind} from '../src/domain.js';
 test('untrusted names and links cannot become executable markup',()=>{
   assert.equal(escapeHTML('<img src=x onerror="alert(1)">'), '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
   assert.equal(safeLink('javascript:alert(1)'), '');assert.equal(safeLink('data:text/html,<script>'), '');
@@ -48,4 +48,14 @@ test('tag validation separates garments from outfits and preserves legacy edits'
  assert.throws(()=>validateEntry({kind:'item',title:'Рубашка',tags:['Осень']}),/теги/);
  assert.throws(()=>validateEntry({kind:'outfit',title:'Образ',item_ids:['a'],tags:['База']}),/теги/);
  assert.throws(()=>validateEntry({kind:'item',title:'Рубашка',tags:'Любимое'}),/теги/);
+});
+test('wishlist has no wardrobe tags or personal outfit photo roles',()=>{
+ assert.deepEqual(tagsForKind('wishlist'),[]);
+ assert.throws(()=>validateEntry({kind:'wishlist',title:'Покупка',tags:['От отца']}),/теги/);
+ assert.deepEqual(photoRolesForKind('wishlist'),['С сайта','Отдельно','Деталь']);
+ assert.equal(photoRoleForKind('wishlist','На мне'),'Отдельно');
+ assert.equal(photoRoleForKind('wishlist','Образ'),'Отдельно');
+ assert.equal(photoRoleForKind('wishlist','С сайта'),'С сайта');
+ assert(photoRolesForKind('item').includes('На мне'));
+ assert.equal(photoRoleForKind('item','На мне'),'На мне');
 });

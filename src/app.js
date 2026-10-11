@@ -1,5 +1,5 @@
 import {WardrobeBackend} from './backend.js';
-import {SECTIONS,CATEGORIES,tagsForKind,PHOTO_ROLES,escapeHTML as esc,safeLink,filterEntries,validateEntry} from './domain.js';
+import {SECTIONS,CATEGORIES,tagsForKind,photoRolesForKind,escapeHTML as esc,safeLink,filterEntries,validateEntry} from './domain.js';
 import {icon} from './icons.js';
 
 const root=document.querySelector('#app');
@@ -111,11 +111,11 @@ function detail(id){
   if($('#delete-entry'))$('#delete-entry').onclick=async()=>{const warning=outfits.length?`Вещь используется в ${outfits.length} образах. Она останется в их составе с отметкой «В корзине». Переместить?`:'Переместить карточку в корзину? Её можно восстановить.';if(confirm(warning))await changeEntry(e,{deleted_at:new Date().toISOString()},'Перемещено в корзину');};
   if($('#restore-entry'))$('#restore-entry').onclick=()=>changeEntry(e,{deleted_at:null},'Карточка восстановлена');
   if($('#delete-forever'))$('#delete-forever').onclick=async()=>{if(!confirm('Удалить карточку и фотографии навсегда? Это действие нельзя отменить.'))return;try{await api.removeForever(e);closeDialog(true);await reload();toast('Карточка удалена');}catch(err){toast(errorMessage(err));}};
-  if($('#mark-bought'))$('#mark-bought').onclick=()=>changeEntry(e,{kind:'item'},'Вещь добавлена в гардероб');
+  if($('#mark-bought'))$('#mark-bought').onclick=()=>changeEntry(e,{kind:'item',tags:[]},'Вещь добавлена в гардероб');
   if($('#create-from-reference'))$('#create-from-reference').onclick=()=>editEntry(null,{kind:'outfit',inspiration_id:e.id});
 }
 function linkedCard(e){return `<button class="linked-card" data-linked="${e.id}"><div>${cardVisual(e)}</div><span>${esc(e.title)}<small>${e.deleted_at?'В корзине':esc(e.category||SECTIONS[e.kind].title)}</small></span>${icon('arrow')}</button>`;}
-async function changeEntry(entry,patch,message){try{await api.update(entry.id,patch);closeDialog(true);await reload();toast(message);}catch(e){toast(errorMessage(e));}}
+async function changeEntry(entry,patch,message){try{if(entry.kind==='wishlist'&&patch.kind==='item')await api.save({...entry,...patch},entry.photos);else await api.update(entry.id,patch);closeDialog(true);await reload();toast(message);}catch(e){toast(errorMessage(e));}}
 
 function input(label,name,value='',attrs=''){return `<label>${label}<input name="${name}" value="${esc(value)}" ${attrs}></label>`;}
 function editEntry(entry=null,defaults={}){
@@ -149,7 +149,7 @@ function addPhotos(files){
   dirty=true;renderPhotoDrafts();
 }
 function renderPhotoDrafts(){
-  $('#photo-drafts').innerHTML=photoDrafts.map((p,i)=>`<div class="photo-draft"><div class="photo-draft-image"><img src="${esc(p.url)}" alt="Фото ${i+1}">${i===0?'<span class="cover-label">Обложка</span>':''}</div><div class="photo-draft-fields"><label class="sr-only" for="role-${i}">Тип фотографии ${i+1}</label><select id="role-${i}" data-role="${i}">${PHOTO_ROLES.map(r=>`<option ${p.role===r?'selected':''}>${r}</option>`).join('')}</select><input data-caption="${i}" value="${esc(p.caption)}" aria-label="Подпись к фото ${i+1}" maxlength="300"><div class="photo-draft-controls"><button type="button" class="icon-button" data-move="${i}" data-direction="-1" aria-label="Поднять фото ${i+1}" ${i===0?'disabled':''}>${icon('up')}</button><button type="button" class="icon-button" data-move="${i}" data-direction="1" aria-label="Опустить фото ${i+1}" ${i===photoDrafts.length-1?'disabled':''}>${icon('down')}</button><button type="button" class="icon-button" data-remove="${i}" aria-label="Убрать фото ${i+1}">${icon('trash')}</button></div></div></div>`).join('');
+  $('#photo-drafts').innerHTML=photoDrafts.map((p,i)=>`<div class="photo-draft"><div class="photo-draft-image"><img src="${esc(p.url)}" alt="Фото ${i+1}">${i===0?'<span class="cover-label">Обложка</span>':''}</div><div class="photo-draft-fields"><label class="sr-only" for="role-${i}">Тип фотографии ${i+1}</label><select id="role-${i}" data-role="${i}">${photoRolesForKind(editing.kind).map(r=>`<option ${p.role===r?'selected':''}>${r}</option>`).join('')}</select><input data-caption="${i}" value="${esc(p.caption)}" aria-label="Подпись к фото ${i+1}" maxlength="300"><div class="photo-draft-controls"><button type="button" class="icon-button" data-move="${i}" data-direction="-1" aria-label="Поднять фото ${i+1}" ${i===0?'disabled':''}>${icon('up')}</button><button type="button" class="icon-button" data-move="${i}" data-direction="1" aria-label="Опустить фото ${i+1}" ${i===photoDrafts.length-1?'disabled':''}>${icon('down')}</button><button type="button" class="icon-button" data-remove="${i}" aria-label="Убрать фото ${i+1}">${icon('trash')}</button></div></div></div>`).join('');
   document.querySelectorAll('[data-role]').forEach(el=>el.onchange=()=>{photoDrafts[Number(el.dataset.role)].role=el.value;dirty=true;});
   document.querySelectorAll('[data-caption]').forEach(el=>el.oninput=()=>{photoDrafts[Number(el.dataset.caption)].caption=el.value;dirty=true;});
   document.querySelectorAll('[data-move]').forEach(el=>el.onclick=()=>{const i=Number(el.dataset.move),j=i+Number(el.dataset.direction);[photoDrafts[i],photoDrafts[j]]=[photoDrafts[j],photoDrafts[i]];dirty=true;renderPhotoDrafts();});

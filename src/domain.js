@@ -8,8 +8,10 @@ export const CATEGORIES = ['Верхняя одежда','Футболки и т
 export const SEASONS = ['Весна','Лето','Осень','Зима'];
 export const ITEM_TAGS = ['От отца','Повседневное','Для особых случаев','Светлое','Тёмное','Цветное','Любимое','База','Акцент'];
 export const OUTFIT_TAGS = ['Лёгкий','Тёплый'];
-export function tagsForKind(kind) {return ['item','wishlist'].includes(kind)?ITEM_TAGS:kind==='outfit'?OUTFIT_TAGS:[];}
+export function tagsForKind(kind) {return kind==='item'?ITEM_TAGS:kind==='outfit'?OUTFIT_TAGS:[];}
 export const PHOTO_ROLES = ['С сайта','Отдельно','На мне','Деталь','Образ'];
+export function photoRolesForKind(kind) {return kind==='wishlist'?['С сайта','Отдельно','Деталь']:PHOTO_ROLES;}
+export function photoRoleForKind(kind,role) {return photoRolesForKind(kind).includes(role)?role:'Отдельно';}
 export function escapeHTML(value='') {return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 export function safeLink(value) {
   if(!value?.trim())return '';

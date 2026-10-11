@@ -1,6 +1,6 @@
 import {createClient} from '@supabase/supabase-js';
 import JSZip from 'jszip';
-import {validateEntry,filename} from './domain.js';
+import {validateEntry,filename,tagsForKind,photoRoleForKind} from './domain.js';
 
 export class WardrobeBackend {
   constructor(config) {
@@ -37,7 +37,7 @@ export class WardrobeBackend {
       const {data:urls,error:signError}=await this.client.storage.from('wardrobe').createSignedUrls(paths.slice(offset,offset+100),900);if(signError)throw signError;
       for(const u of urls||[]){if(u.error)throw new Error('Не удалось открыть фотографию.');this.signed.set(u.path,u.signedUrl);}
     }
-    for(const e of entries){e.tags=e.tags||[];e.photos.sort((a,b)=>a.position-b.position);e.photos=e.photos.map(p=>({...p,url:this.signed.get(p.path)}));e.item_ids=e.links.map(l=>l.item_id);}
+    for(const e of entries){e.tags=tagsForKind(e.kind).length?e.tags||[]:[];e.photos.sort((a,b)=>a.position-b.position);e.photos=e.photos.map(p=>({...p,role:photoRoleForKind(e.kind,p.role),url:this.signed.get(p.path)}));e.item_ids=e.links.map(l=>l.item_id);}
     return entries;
   }
   async save(draft,photoDrafts){
@@ -54,7 +54,7 @@ export class WardrobeBackend {
           const {error}=await this.client.storage.from('wardrobe').upload(path,blob,{contentType:'image/jpeg',upsert:false});if(error)throw error;
           uploaded.push(path);
         }
-        photos.push({id:p.id||crypto.randomUUID(),path,role:p.role||'Отдельно',caption:p.caption||'',position:i});
+        photos.push({id:p.id||crypto.randomUUID(),path,role:photoRoleForKind(entry.kind,p.role),caption:p.caption||'',position:i});
       }
       const {data,error}=await this.client.rpc('save_wardrobe_entry',{p_entry:entry,p_photos:photos,p_item_ids:entry.item_ids||[]});if(error)throw error;
       const removed=data?.removed_paths||[];
