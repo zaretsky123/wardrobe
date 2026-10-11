@@ -25,3 +25,9 @@
 .filter-panel .checkbox-chips label{width:auto;max-width:none;min-width:0;flex:none}
 .card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
 .card-tags span{font-size:9px;line-height:1.4;color:#697c52;background:#edf1e6;border-radius:9px;padding:4px 7px;overflow-wrap:anywhere}
+
+/* Make purchase prices easy to scan. */
+.card-store{font-size:11px;line-height:1.4;color:#7b856f;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.purchase-price-row{margin-top:8px}
+.card-bottom .card-price{font-size:18px;font-weight:650;line-height:1.4;color:#252824;letter-spacing:-.2px;font-variant-numeric:tabular-nums}
+@media(max-width:700px){.card-store{font-size:10px}.card-bottom .card-price{font-size:16px}}
