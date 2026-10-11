@@ -26,6 +26,7 @@ create table public.wardrobe_entries (
   fit text check (length(fit)<=100),
   seasons text[] not null default '{}' check (seasons <@ array['Весна','Лето','Осень','Зима']),
   tags text[] not null default '{}' check (cardinality(tags)<=30 and array_position(tags,null) is null),
+  store_name text check (length(store_name)<=160),
   source_url text check (source_url is null or (length(source_url)<=2048 and source_url ~ '^https?://')),
   note text not null default '' check (length(note)<=5000),
   price numeric(12,2) check (price>=0),
@@ -138,13 +139,13 @@ begin
     select 1 from public.wardrobe_entries where id=(p_entry->>'inspiration_id')::uuid and user_id=v_owner and kind='inspiration'
   ) then raise exception 'Invalid inspiration'; end if;
   v_tags := array(select jsonb_array_elements_text(coalesce(p_entry->'tags','[]'::jsonb)));
-  insert into public.wardrobe_entries(id,user_id,kind,title,category,color,brand,size,fit,seasons,tags,source_url,note,price,favorite,inspiration_id)
+  insert into public.wardrobe_entries(id,user_id,kind,title,category,color,brand,size,fit,seasons,tags,store_name,source_url,note,price,favorite,inspiration_id)
   values (v_id,v_owner,p_entry->>'kind',trim(p_entry->>'title'),nullif(p_entry->>'category',''),nullif(p_entry->>'color',''),
     nullif(p_entry->>'brand',''),nullif(p_entry->>'size',''),nullif(p_entry->>'fit',''),
-    array(select jsonb_array_elements_text(coalesce(p_entry->'seasons','[]'::jsonb))),coalesce(v_tags,'{}'),nullif(p_entry->>'source_url',''),
+    array(select jsonb_array_elements_text(coalesce(p_entry->'seasons','[]'::jsonb))),coalesce(v_tags,'{}'),nullif(trim(p_entry->>'store_name'),''),nullif(p_entry->>'source_url',''),
     coalesce(p_entry->>'note',''),nullif(p_entry->>'price','')::numeric,coalesce((p_entry->>'favorite')::boolean,false),nullif(p_entry->>'inspiration_id','')::uuid)
   on conflict(id) do update set kind=excluded.kind,title=excluded.title,category=excluded.category,color=excluded.color,brand=excluded.brand,
-    size=excluded.size,fit=excluded.fit,seasons=excluded.seasons,tags=case when p_entry ? 'tags' then excluded.tags else public.wardrobe_entries.tags end,source_url=excluded.source_url,note=excluded.note,price=excluded.price,
+    size=excluded.size,fit=excluded.fit,seasons=excluded.seasons,tags=case when p_entry ? 'tags' then excluded.tags else public.wardrobe_entries.tags end,store_name=case when p_entry ? 'store_name' then excluded.store_name else public.wardrobe_entries.store_name end,source_url=excluded.source_url,note=excluded.note,price=excluded.price,
     favorite=excluded.favorite,inspiration_id=excluded.inspiration_id;
 
   select coalesce(array_agg(path),'{}') into v_removed from public.wardrobe_photos

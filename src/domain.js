@@ -19,7 +19,7 @@ export function safeLink(value) {
 }
 export function filterEntries(entries,{section='item',search='',category='',season='',tags=[],favorites=false,trash=false}={}) {
   const needle=search.trim().toLocaleLowerCase('ru');
-  return entries.filter(e=>e.kind===section && Boolean(e.deleted_at)===trash && (!category||e.category===category) && (!season||e.seasons?.includes(season)) && tags.every(tag=>e.tags?.includes(tag)) && (!favorites||e.favorite) && (!needle||[e.title,e.brand,e.color,e.note,e.category,...e.tags||[]].filter(Boolean).join(' ').toLocaleLowerCase('ru').includes(needle)));
+  return entries.filter(e=>e.kind===section && Boolean(e.deleted_at)===trash && (!category||e.category===category) && (!season||e.seasons?.includes(season)) && tags.every(tag=>e.tags?.includes(tag)) && (!favorites||e.favorite) && (!needle||[e.title,e.brand,e.color,e.note,e.category,e.store_name,...e.tags||[]].filter(Boolean).join(' ').toLocaleLowerCase('ru').includes(needle)));
 }
 export function validateEntry(e) {
   if(!SECTIONS[e.kind])throw new Error('Неизвестный раздел.');
@@ -29,7 +29,8 @@ export function validateEntry(e) {
   if(e.price!==null&&e.price!==undefined&&(!Number.isFinite(Number(e.price))||Number(e.price)<0))throw new Error('Проверь цену.');
   if(e.kind==='outfit'&&!e.item_ids?.length)throw new Error('Выбери хотя бы одну вещь для образа.');
   if(e.tags!==undefined&&(!Array.isArray(e.tags)||e.tags.some(tag=>!tagsForKind(e.kind).includes(tag))))throw new Error('Проверь теги.');
-  return {...e,...(e.tags!==undefined?{tags:[...new Set(e.tags)]}:{}),title:e.title.trim(),source_url:safeLink(e.source_url)||null};
+  if(e.store_name!=null&&(typeof e.store_name!=='string'||e.store_name.trim().length>160))throw new Error('Название магазина должно быть не длиннее 160 символов.');
+  return {...e,...(e.tags!==undefined?{tags:[...new Set(e.tags)]}:{}),...(e.store_name!==undefined?{store_name:e.store_name?.trim()||null}:{}),title:e.title.trim(),source_url:safeLink(e.source_url)||null};
 }
 export function imageExtension(type) {const types={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif'};return types[type]||null;}
 export function filename(value) {return String(value).replace(/[\\/:*?"<>|]/g,'-').trim().slice(0,100)||'гардероб';}

@@ -59,3 +59,11 @@ test('wishlist has no wardrobe tags or personal outfit photo roles',()=>{
  assert(photoRolesForKind('item').includes('На мне'));
  assert.equal(photoRoleForKind('item','На мне'),'На мне');
 });
+test('store names work without a link and can be searched independently',()=>{
+ const e=validateEntry({kind:'wishlist',title:'Ботинки',store_name:'  Универмаг  ',tags:[]});
+ assert.equal(e.store_name,'Универмаг');assert.equal(e.source_url,null);
+ assert.deepEqual(filterEntries([e],{section:'wishlist',search:'УНИВЕРМАГ'}),[e]);
+ assert.equal(validateEntry({...e,store_name:'  '}).store_name,null);
+ assert.equal(validateEntry({kind:'wishlist',title:'Ботинки'}).store_name,undefined);
+ assert.throws(()=>validateEntry({...e,store_name:'a'.repeat(161)}),/магазина/);
+});

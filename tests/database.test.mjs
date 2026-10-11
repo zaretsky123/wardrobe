@@ -59,6 +59,20 @@ test('database policies, transactional saving and outfit references',async t=>{
    assert.deepEqual(result.rows[0],{tags:[],favorite:true});
    await assert.rejects(as('authenticated',OWNER,tx=>tx.query('update wardrobe_entries set tags=array[null]::text[] where id=$1',[ITEM])),/check constraint/);
  });
+ await t.test('store name is independent of URL, editable and preserved by older clients and purchase moves',async()=>{
+   const id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+   const entry={id,kind:'wishlist',title:'Ботинки'};
+   await as('authenticated',OWNER,tx=>save(tx,{...entry,store_name:' Универмаг '}));
+   let row=await db.query('select store_name,source_url from wardrobe_entries where id=$1',[id]);assert.deepEqual(row.rows[0],{store_name:'Универмаг',source_url:null});
+   await as('authenticated',OWNER,tx=>save(tx,{...entry,source_url:'https://example.test/shoes'}));
+   row=await db.query('select store_name from wardrobe_entries where id=$1',[id]);assert.equal(row.rows[0].store_name,'Универмаг');
+   await as('authenticated',OWNER,tx=>save(tx,{...entry,store_name:''}));
+   row=await db.query('select store_name from wardrobe_entries where id=$1',[id]);assert.equal(row.rows[0].store_name,null);
+   await as('authenticated',OWNER,tx=>save(tx,{...entry,store_name:'Другой магазин'}));
+   await as('authenticated',OWNER,tx=>save(tx,{...entry,kind:'item'}));
+   row=await db.query('select kind,store_name from wardrobe_entries where id=$1',[id]);assert.deepEqual(row.rows[0],{kind:'item',store_name:'Другой магазин'});
+   await assert.rejects(as('authenticated',OWNER,tx=>save(tx,{...entry,kind:'item',store_name:'a'.repeat(161)})),/check constraint/);
+ });
  await t.test('outfits reference only real wardrobe items and reject empty selections',async()=>{
    await as('authenticated',OWNER,tx=>save(tx,{id:REFERENCE,kind:'inspiration',title:'Референс'}));
    await as('authenticated',OWNER,tx=>save(tx,{id:OUTFIT,kind:'outfit',title:'На вечер',inspiration_id:REFERENCE,tags:['Тёплый']},[],[ITEM]));
